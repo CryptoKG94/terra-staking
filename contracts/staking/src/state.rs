@@ -11,8 +11,8 @@ static PREFIX_REWARD: &[u8] = b"reward";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
-    pub anchor_token: CanonicalAddr,
-    pub staking_token: CanonicalAddr,
+    pub luna_token: CanonicalAddr,
+    pub ust_token: CanonicalAddr,
     pub distribution_schedule: Vec<(u64, u64, Uint128)>,
 }
 
@@ -26,9 +26,12 @@ pub fn read_config(storage: &dyn Storage) -> StdResult<Config> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
-    pub last_distributed: u64,
-    pub total_bond_amount: Uint128,
-    pub global_reward_index: Decimal,
+    pub last_distributed_luna: u64,
+    pub total_bond_amount_luna: Uint128,
+    pub global_reward_index_luna: Decimal,
+    pub last_distributed_ust: u64,
+    pub total_bond_amount_ust: Uint128,
+    pub global_reward_index_ust: Decimal,
 }
 
 pub fn store_state(storage: &mut dyn Storage, state: &State) -> StdResult<()> {
@@ -41,9 +44,12 @@ pub fn read_state(storage: &dyn Storage) -> StdResult<State> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct StakerInfo {
-    pub reward_index: Decimal,
-    pub bond_amount: Uint128,
-    pub pending_reward: Uint128,
+    pub reward_index_luna: Decimal,
+    pub bond_amount_luna: Uint128,
+    pub pending_reward_luna: Uint128,
+    pub reward_index_ust: Decimal,
+    pub bond_amount_ust: Uint128,
+    pub pending_reward_ust: Uint128,
 }
 
 /// returns return staker_info of the given owner
@@ -66,9 +72,12 @@ pub fn read_staker_info(storage: &dyn Storage, owner: &CanonicalAddr) -> StdResu
     match ReadonlyBucket::new(storage, PREFIX_REWARD).may_load(owner.as_slice())? {
         Some(staker_info) => Ok(staker_info),
         None => Ok(StakerInfo {
-            reward_index: Decimal::zero(),
-            bond_amount: Uint128::zero(),
-            pending_reward: Uint128::zero(),
+            reward_index_luna: Decimal::zero(),
+            bond_amount_luna: Uint128::zero(),
+            pending_reward_luna: Uint128::zero(),
+            reward_index_ust: Decimal::zero(),
+            bond_amount_ust: Uint128::zero(),
+            pending_reward_ust: Uint128::zero(),
         }),
     }
 }

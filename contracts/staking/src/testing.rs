@@ -16,8 +16,8 @@ fn proper_initialization() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![(100, 200, Uint128::from(1000000u128))],
     };
 
@@ -32,8 +32,8 @@ fn proper_initialization() {
     assert_eq!(
         config,
         ConfigResponse {
-            anchor_token: "reward0000".to_string(),
-            staking_token: "staking0000".to_string(),
+            luna_token: "luna0000".to_string(),
+            ust_token: "ust0000".to_string(),
             distribution_schedule: vec![(100, 200, Uint128::from(1000000u128))],
         }
     );
@@ -48,9 +48,12 @@ fn proper_initialization() {
     assert_eq!(
         state,
         StateResponse {
-            last_distributed: mock_env().block.time.seconds(),
-            total_bond_amount: Uint128::zero(),
-            global_reward_index: Decimal::zero(),
+            last_distributed_luna: mock_env().block.time.seconds(),
+            total_bond_amount_luna: Uint128::zero(),
+            global_reward_index_luna: Decimal::zero(),
+            last_distributed_ust: mock_env().block.time.seconds(),
+            total_bond_amount_ust: Uint128::zero(),
+            global_reward_index_ust: Decimal::zero(),
         }
     );
 }
@@ -60,8 +63,8 @@ fn test_bond_tokens() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (
                 mock_env().block.time.seconds(),
@@ -79,13 +82,13 @@ fn test_bond_tokens() {
     let info = mock_info("addr0000", &[]);
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
 
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let mut env = mock_env();
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
@@ -104,9 +107,12 @@ fn test_bond_tokens() {
         .unwrap(),
         StakerInfoResponse {
             staker: "addr0000".to_string(),
-            reward_index: Decimal::zero(),
-            pending_reward: Uint128::zero(),
-            bond_amount: Uint128::from(100u128),
+            reward_index_luna: Decimal::zero(),
+            pending_reward_luna: Uint128::zero(),
+            bond_amount_luna: Uint128::from(100u128),
+            reward_index_ust: Decimal::zero(),
+            pending_reward_ust: Uint128::zero(),
+            bond_amount_ust: Uint128::from(100u128),
         }
     );
 
@@ -121,14 +127,17 @@ fn test_bond_tokens() {
         )
         .unwrap(),
         StateResponse {
-            total_bond_amount: Uint128::from(100u128),
-            global_reward_index: Decimal::zero(),
-            last_distributed: mock_env().block.time.seconds(),
+            total_bond_amount_luna: Uint128::from(100u128),
+            global_reward_index_luna: Decimal::zero(),
+            last_distributed_luna: mock_env().block.time.seconds(),
+            total_bond_amount_ust: Uint128::from(100u128),
+            global_reward_index_ust: Decimal::zero(),
+            last_distributed_ust: mock_env().block.time.seconds(),
         }
     );
 
     // bond 100 more tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
@@ -152,9 +161,12 @@ fn test_bond_tokens() {
         .unwrap(),
         StakerInfoResponse {
             staker: "addr0000".to_string(),
-            reward_index: Decimal::from_ratio(1000u128, 1u128),
-            pending_reward: Uint128::from(100000u128),
-            bond_amount: Uint128::from(200u128),
+            reward_index_luna: Decimal::from_ratio(1000u128, 1u128),
+            pending_reward_luna: Uint128::from(100000u128),
+            bond_amount_luna: Uint128::from(200u128),
+            reward_index_ust: Decimal::from_ratio(1000u128, 1u128),
+            pending_reward_ust: Uint128::from(100000u128),
+            bond_amount_ust: Uint128::from(200u128),
         }
     );
 
@@ -169,14 +181,17 @@ fn test_bond_tokens() {
         )
         .unwrap(),
         StateResponse {
-            total_bond_amount: Uint128::from(200u128),
-            global_reward_index: Decimal::from_ratio(1000u128, 1u128),
-            last_distributed: mock_env().block.time.seconds() + 10,
+            total_bond_amount_luna: Uint128::from(200u128),
+            global_reward_index_luna: Decimal::from_ratio(1000u128, 1u128),
+            last_distributed_luna: mock_env().block.time.seconds() + 10,
+            total_bond_amount_ust: Uint128::from(200u128),
+            global_reward_index_ust: Decimal::from_ratio(1000u128, 1u128),
+            last_distributed_ust: mock_env().block.time.seconds() + 10,
         }
     );
 
     // failed with unautorized
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
@@ -195,8 +210,8 @@ fn test_unbond() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (12345, 12345 + 100, Uint128::from(1000000u128)),
             (12345 + 100, 12345 + 200, Uint128::from(10000000u128)),
@@ -207,16 +222,16 @@ fn test_unbond() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // unbond 150 tokens; failed
-    let msg = ExecuteMsg::Unbond {
+    let msg = ExecuteMsg::UnbondLuna {
         amount: Uint128::from(150u128),
     };
 
@@ -230,7 +245,7 @@ fn test_unbond() {
     };
 
     // normal unbond
-    let msg = ExecuteMsg::Unbond {
+    let msg = ExecuteMsg::UnbondLuna {
         amount: Uint128::from(100u128),
     };
 
@@ -239,7 +254,7 @@ fn test_unbond() {
     assert_eq!(
         res.messages,
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "staking0000".to_string(),
+            contract_addr: "ust0000".to_string(),
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(100u128),
@@ -255,8 +270,8 @@ fn test_compute_reward() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (
                 mock_env().block.time.seconds(),
@@ -275,12 +290,12 @@ fn test_compute_reward() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let mut env = mock_env();
     let _res = execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();
 
@@ -289,7 +304,7 @@ fn test_compute_reward() {
     env.block.time = env.block.time.plus_seconds(100);
 
     // bond 100 more tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
@@ -311,9 +326,12 @@ fn test_compute_reward() {
         .unwrap(),
         StakerInfoResponse {
             staker: "addr0000".to_string(),
-            reward_index: Decimal::from_ratio(10000u128, 1u128),
-            pending_reward: Uint128::from(1000000u128),
-            bond_amount: Uint128::from(200u128),
+            reward_index_luna: Decimal::from_ratio(10000u128, 1u128),
+            pending_reward_luna: Uint128::from(1000000u128),
+            bond_amount_luna: Uint128::from(200u128),
+            reward_index_ust: Decimal::from_ratio(10000u128, 1u128),
+            pending_reward_ust: Uint128::from(1000000u128),
+            bond_amount_ust: Uint128::from(200u128),
         }
     );
 
@@ -323,7 +341,7 @@ fn test_compute_reward() {
     let info = mock_info("addr0000", &[]);
 
     // unbond
-    let msg = ExecuteMsg::Unbond {
+    let msg = ExecuteMsg::UnbondLuna {
         amount: Uint128::from(100u128),
     };
     let _res = execute(deps.as_mut(), env, info, msg).unwrap();
@@ -342,9 +360,12 @@ fn test_compute_reward() {
         .unwrap(),
         StakerInfoResponse {
             staker: "addr0000".to_string(),
-            reward_index: Decimal::from_ratio(15000u64, 1u64),
-            pending_reward: Uint128::from(2000000u128),
-            bond_amount: Uint128::from(100u128),
+            reward_index_luna: Decimal::from_ratio(15000u64, 1u64),
+            pending_reward_luna: Uint128::from(2000000u128),
+            bond_amount_luna: Uint128::from(100u128),
+            reward_index_ust: Decimal::from_ratio(15000u64, 1u64),
+            pending_reward_ust: Uint128::from(2000000u128),
+            bond_amount_ust: Uint128::from(100u128),
         }
     );
 
@@ -364,9 +385,12 @@ fn test_compute_reward() {
         .unwrap(),
         StakerInfoResponse {
             staker: "addr0000".to_string(),
-            reward_index: Decimal::from_ratio(25000u64, 1u64),
-            pending_reward: Uint128::from(3000000u128),
-            bond_amount: Uint128::from(100u128),
+            reward_index_luna: Decimal::from_ratio(25000u64, 1u64),
+            pending_reward_luna: Uint128::from(3000000u128),
+            bond_amount_luna: Uint128::from(100u128),
+            reward_index_ust: Decimal::from_ratio(25000u64, 1u64),
+            pending_reward_ust: Uint128::from(3000000u128),
+            bond_amount_ust: Uint128::from(100u128),
         }
     );
 }
@@ -376,8 +400,8 @@ fn test_withdraw() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (
                 mock_env().block.time.seconds(),
@@ -396,12 +420,12 @@ fn test_withdraw() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let mut env = mock_env();
     let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -411,13 +435,13 @@ fn test_withdraw() {
 
     let info = mock_info("addr0000", &[]);
 
-    let msg = ExecuteMsg::Withdraw {};
+    let msg = ExecuteMsg::WithdrawLuna {};
     let res = execute(deps.as_mut(), env, info, msg).unwrap();
 
     assert_eq!(
         res.messages,
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "reward0000".to_string(),
+            contract_addr: "luna0000".to_string(),
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(1000000u128),
@@ -433,8 +457,8 @@ fn test_migrate_staking() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (
                 mock_env().block.time.seconds(),
@@ -453,12 +477,12 @@ fn test_migrate_staking() {
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let mut env = mock_env();
     let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -467,13 +491,13 @@ fn test_migrate_staking() {
     env.block.time = env.block.time.plus_seconds(100);
     let info = mock_info("addr0000", &[]);
 
-    let msg = ExecuteMsg::Withdraw {};
+    let msg = ExecuteMsg::WithdrawLuna {};
     let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     assert_eq!(
         res.messages,
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "reward0000".to_string(),
+            contract_addr: "luna0000".to_string(),
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(1000000u128),
@@ -489,7 +513,7 @@ fn test_migrate_staking() {
     deps.querier.with_anc_minter("gov0000".to_string());
 
     let msg = ExecuteMsg::MigrateStaking {
-        new_staking_contract: "newstaking0000".to_string(),
+        new_staking_contract: "newust0000".to_string(),
     };
 
     // unauthorized attempt
@@ -516,9 +540,9 @@ fn test_migrate_staking() {
     assert_eq!(
         res.messages,
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "reward0000".to_string(),
+            contract_addr: "luna0000".to_string(),
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
-                recipient: "newstaking0000".to_string(),
+                recipient: "newust0000".to_string(),
                 amount: Uint128::from(5000000u128),
             })
             .unwrap(),
@@ -532,8 +556,8 @@ fn test_migrate_staking() {
     assert_eq!(
         config,
         ConfigResponse {
-            anchor_token: "reward0000".to_string(),
-            staking_token: "staking0000".to_string(),
+            luna_token: "luna0000".to_string(),
+            ust_token: "ust0000".to_string(),
             distribution_schedule: vec![
                 (
                     mock_env().block.time.seconds(),
@@ -555,8 +579,8 @@ fn test_update_config() {
     let mut deps = mock_dependencies(&[]);
 
     let msg = InstantiateMsg {
-        anchor_token: "reward0000".to_string(),
-        staking_token: "staking0000".to_string(),
+        luna_token: "luna0000".to_string(),
+        ust_token: "ust0000".to_string(),
         distribution_schedule: vec![
             (
                 mock_env().block.time.seconds(),
@@ -608,12 +632,12 @@ fn test_update_config() {
 
     // do some bond and update rewards
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let mut env = mock_env();
     let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
@@ -622,12 +646,12 @@ fn test_update_config() {
     env.block.time = env.block.time.plus_seconds(100);
     let info = mock_info("addr0000", &[]);
 
-    let msg = ExecuteMsg::Withdraw {};
+    let msg = ExecuteMsg::WithdrawLuna {};
     let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
     assert_eq!(
         res.messages,
         vec![SubMsg::new(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: "reward0000".to_string(),
+            contract_addr: "luna0000".to_string(),
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: "addr0000".to_string(),
                 amount: Uint128::from(1000000u128),
@@ -680,12 +704,12 @@ fn test_update_config() {
 
     // do some bond and update rewards
     // bond 100 tokens
-    let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
+    let msg = ExecuteMsg::ReceiveLuna(Cw20ReceiveMsg {
         sender: "addr0000".to_string(),
         amount: Uint128::from(100u128),
         msg: to_binary(&Cw20HookMsg::Bond {}).unwrap(),
     });
-    let info = mock_info("staking0000", &[]);
+    let info = mock_info("ust0000", &[]);
     let _res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     // 100 seconds is passed
@@ -694,7 +718,7 @@ fn test_update_config() {
 
     let info = mock_info("addr0000", &[]);
 
-    let msg = ExecuteMsg::Withdraw {};
+    let msg = ExecuteMsg::WithdrawLuna {};
     let _res = execute(deps.as_mut(), env, info, msg).unwrap();
 
     //cannot update previous scehdule
