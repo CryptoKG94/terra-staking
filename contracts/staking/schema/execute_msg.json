@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ExecuteMsg",
-  "anyOf": [
+  "oneOf": [
     {
       "type": "object",
       "required": [
-        "receive"
+        "receive_luna"
       ],
       "properties": {
-        "receive": {
+        "receive_luna": {
           "$ref": "#/definitions/Cw20ReceiveMsg"
         }
       },
@@ -17,10 +17,42 @@
     {
       "type": "object",
       "required": [
-        "unbond"
+        "receive_ust"
       ],
       "properties": {
-        "unbond": {
+        "receive_ust": {
+          "$ref": "#/definitions/Cw20ReceiveMsg"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "unbond_luna"
+      ],
+      "properties": {
+        "unbond_luna": {
+          "type": "object",
+          "required": [
+            "amount"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "unbond_ust"
+      ],
+      "properties": {
+        "unbond_ust": {
           "type": "object",
           "required": [
             "amount"
@@ -38,10 +70,22 @@
       "description": "Withdraw pending rewards",
       "type": "object",
       "required": [
-        "withdraw"
+        "withdraw_luna"
       ],
       "properties": {
-        "withdraw": {
+        "withdraw_luna": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "withdraw_ust"
+      ],
+      "properties": {
+        "withdraw_ust": {
           "type": "object"
         }
       },
@@ -62,6 +106,46 @@
           "properties": {
             "new_staking_contract": {
               "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_config"
+      ],
+      "properties": {
+        "update_config": {
+          "type": "object",
+          "required": [
+            "distribution_schedule"
+          ],
+          "properties": {
+            "distribution_schedule": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "integer",
+                    "format": "uint64",
+                    "minimum": 0.0
+                  },
+                  {
+                    "type": "integer",
+                    "format": "uint64",
+                    "minimum": 0.0
+                  },
+                  {
+                    "$ref": "#/definitions/Uint128"
+                  }
+                ],
+                "maxItems": 3,
+                "minItems": 3
+              }
             }
           }
         }

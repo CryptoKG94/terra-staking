@@ -15,7 +15,8 @@ PARAM=$1
 
 ##########################################################################################
 
-NODE="--node http://167.99.25.150:26657"
+NODE="--node https://bombay.stakesystems.io:2053"
+# http://167.99.25.150:26657"
 #NODE="--node https://rpc.uni.junomint.com:443"
 CHAIN_ID=Bombay-12
 DENOM="uluna"
@@ -25,7 +26,7 @@ STAKE_TOKEN_ADDRESS="juno18hh4dflvfdcuklc9q4ghlr83fy5k4sdx6rgfzzwhdfqznsj4xjzqds
 ##########################################################################################
 #not depends
 NODECHAIN=" $NODE --chain-id $CHAIN_ID"
-TXFLAG=" $NODECHAIN --gas-prices 0.025$DENOM --gas auto --gas-adjustment 1.3"
+TXFLAG=" $NODECHAIN --gas-prices 100000$DENOM --gas auto --gas-adjustment 1.3"
 WALLET="--from kg"
 
 WASMFILE="anchor_staking.wasm"
@@ -34,7 +35,7 @@ FILE_UPLOADHASH="uploadtx.txt"
 FILE_CONTRACT_ADDR="contractaddr.txt"
 FILE_CODE_ID="code.txt"
 
-ADDR_KG=""
+ADDR_KG="terra1vschkuj67kgtt9j5mjlwjdjjkq9ku0yy6wakzm"
 
 CreateEnv() {
 
@@ -74,7 +75,9 @@ Upload() {
     echo "================================================="
     cd artifacts
     echo "Upload $WASMFILE"
-    UPLOADTX=$(terrad tx wasm store $WASMFILE $WALLET $TXFLAG --output json -y | jq -r '.txhash')
+    UPLOADTX=$(terrad tx wasm store $WASMFILE $WALLET $TXFLAG --broadcast-mode=block) #--output json -y | jq -r '.txhash')
+    # terrad tx wasm store artifacts/terra_demo.wasm --from demo --chain-id=localterra --gas=auto --fees=100000uluna --broadcast-mode=block
+
     echo "Upload txHash:"$UPLOADTX
     
     #save to FILE_UPLOADHASH
@@ -99,6 +102,31 @@ GetCode() {
 
     #save to FILE_CODE_ID
     echo $CODE_ID > $FILE_CODE_ID
+}
+#Instantiate Contract
+Instantiate() {
+    echo "================================================="
+    echo "Instantiate Contract"
+    
+    #read from FILE_CODE_ID
+    CODE_ID=$(cat $FILE_CODE_ID)
+    terrad tx wasm instantiate 4 '{"owner":"'$ADDR_KG'"}' $WALLET $TXFLAG -y
+}
+
+#Get Instantiated Contract Address
+GetContractAddress() {
+    echo "================================================="
+    echo "Get contract address by code"
+    
+    #read from FILE_CODE_ID
+    CODE_ID=$(cat $FILE_CODE_ID)
+    junod query wasm list-contract-by-code $CODE_ID $NODECHAIN --output json
+    CONTRACT_ADDR=$(junod query wasm list-contract-by-code $CODE_ID $NODECHAIN --output json | jq -r '.contracts[-1]')
+    
+    echo "Contract Address : "$CONTRACT_ADDR
+
+    #save to FILE_CONTRACT_ADDR
+    echo $CONTRACT_ADDR > $FILE_CONTRACT_ADDR
 }
 
 if [[ $PARAM == "" ]]; then

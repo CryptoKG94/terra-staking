@@ -3,19 +3,31 @@
   "title": "StakerInfoResponse",
   "type": "object",
   "required": [
-    "bond_amount",
-    "pending_reward",
-    "reward_index",
+    "bond_amount_luna",
+    "bond_amount_ust",
+    "pending_reward_luna",
+    "pending_reward_ust",
+    "reward_index_luna",
+    "reward_index_ust",
     "staker"
   ],
   "properties": {
-    "bond_amount": {
+    "bond_amount_luna": {
       "$ref": "#/definitions/Uint128"
     },
-    "pending_reward": {
+    "bond_amount_ust": {
       "$ref": "#/definitions/Uint128"
     },
-    "reward_index": {
+    "pending_reward_luna": {
+      "$ref": "#/definitions/Uint128"
+    },
+    "pending_reward_ust": {
+      "$ref": "#/definitions/Uint128"
+    },
+    "reward_index_luna": {
+      "$ref": "#/definitions/Decimal"
+    },
+    "reward_index_ust": {
       "$ref": "#/definitions/Decimal"
     },
     "staker": {

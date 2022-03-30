@@ -57,12 +57,12 @@ pub fn instantiate(
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::ReceiveLuna(msg) => receive_cw20_luna(deps, env, info, msg),
-        ExecuteMsg::UnbondLuna { amount } => unbondLuna(deps, env, info, amount),
-        ExecuteMsg::WithdrawLuna {} => withdrawLuna(deps, env, info),
+        ExecuteMsg::UnbondLuna { amount } => unbond_luna(deps, env, info, amount),
+        ExecuteMsg::WithdrawLuna {} => withdraw_luna(deps, env, info),
 
         ExecuteMsg::ReceiveUst(msg) => receive_cw20_ust(deps, env, info, msg),
-        ExecuteMsg::UnbondUst { amount } => unbondUst(deps, env, info, amount),
-        ExecuteMsg::WithdrawUst {} => withdrawUst(deps, env, info),
+        ExecuteMsg::UnbondUst { amount } => unbond_ust(deps, env, info, amount),
+        ExecuteMsg::WithdrawUst {} => withdraw_ust(deps, env, info),
 
         ExecuteMsg::MigrateStaking {
             new_staking_contract,
@@ -89,7 +89,7 @@ pub fn receive_cw20_luna(
             }
 
             let cw20_sender = deps.api.addr_validate(&cw20_msg.sender)?;
-            bondLuna(deps, env, cw20_sender, cw20_msg.amount)
+            bond_luna(deps, env, cw20_sender, cw20_msg.amount)
         }
         Err(_) => Err(StdError::generic_err("data should be given")),
     }
@@ -111,13 +111,13 @@ pub fn receive_cw20_ust(
             }
 
             let cw20_sender = deps.api.addr_validate(&cw20_msg.sender)?;
-            bondUst(deps, env, cw20_sender, cw20_msg.amount)
+            bond_ust(deps, env, cw20_sender, cw20_msg.amount)
         }
         Err(_) => Err(StdError::generic_err("data should be given")),
     }
 }
 
-pub fn bondLuna(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> StdResult<Response> {
+pub fn bond_luna(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> StdResult<Response> {
     let sender_addr_raw: CanonicalAddr = deps.api.addr_canonicalize(sender_addr.as_str())?;
 
     let config: Config = read_config(deps.storage)?;
@@ -142,7 +142,7 @@ pub fn bondLuna(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> 
     ]))
 }
 
-pub fn bondUst(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> StdResult<Response> {
+pub fn bond_ust(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> StdResult<Response> {
     let sender_addr_raw: CanonicalAddr = deps.api.addr_canonicalize(sender_addr.as_str())?;
 
     let config: Config = read_config(deps.storage)?;
@@ -167,7 +167,7 @@ pub fn bondUst(deps: DepsMut, env: Env, sender_addr: Addr, amount: Uint128) -> S
     ]))
 }
 
-pub fn unbondLuna(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> StdResult<Response> {
+pub fn unbond_luna(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> StdResult<Response> {
     let config: Config = read_config(deps.storage)?;
     let sender_addr_raw: CanonicalAddr = deps.api.addr_canonicalize(info.sender.as_str())?;
 
@@ -212,7 +212,7 @@ pub fn unbondLuna(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -
         ]))
 }
 
-pub fn unbondUst(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> StdResult<Response> {
+pub fn unbond_ust(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> StdResult<Response> {
     let config: Config = read_config(deps.storage)?;
     let sender_addr_raw: CanonicalAddr = deps.api.addr_canonicalize(info.sender.as_str())?;
 
@@ -258,7 +258,7 @@ pub fn unbondUst(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) ->
 }
 
 // withdraw rewards to executor
-pub fn withdrawLuna(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Response> {
+pub fn withdraw_luna(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Response> {
     let sender_addr_raw = deps.api.addr_canonicalize(info.sender.as_str())?;
 
     let config: Config = read_config(deps.storage)?;
@@ -299,7 +299,7 @@ pub fn withdrawLuna(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Res
         ]))
 }
 
-pub fn withdrawUst(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Response> {
+pub fn withdraw_ust(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Response> {
     let sender_addr_raw = deps.api.addr_canonicalize(info.sender.as_str())?;
 
     let config: Config = read_config(deps.storage)?;
@@ -451,8 +451,8 @@ pub fn migrate_staking(
         ]))
 }
 
-fn increase_bond_amount(state: &mut State, staker_info: &mut StakerInfo, amount: Uint128, isLuna: u64) {
-    if isLuna == 1 {
+fn increase_bond_amount(state: &mut State, staker_info: &mut StakerInfo, amount: Uint128, is_luna: u64) {
+    if is_luna == 1 {
         state.total_bond_amount_luna += amount;
         staker_info.bond_amount_luna += amount;        
     } else {
@@ -465,9 +465,9 @@ fn decrease_bond_amount(
     state: &mut State,
     staker_info: &mut StakerInfo,
     amount: Uint128,
-    isLuna: u64,
+    is_luna: u64,
 ) -> StdResult<()> {
-    if isLuna == 1 {
+    if is_luna == 1 {
         state.total_bond_amount_luna = state.total_bond_amount_luna.checked_sub(amount)?;
         staker_info.bond_amount_luna = staker_info.bond_amount_luna.checked_sub(amount)?;
     } else {

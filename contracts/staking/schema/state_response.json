@@ -3,20 +3,34 @@
   "title": "StateResponse",
   "type": "object",
   "required": [
-    "global_reward_index",
-    "last_distributed",
-    "total_bond_amount"
+    "global_reward_index_luna",
+    "global_reward_index_ust",
+    "last_distributed_luna",
+    "last_distributed_ust",
+    "total_bond_amount_luna",
+    "total_bond_amount_ust"
   ],
   "properties": {
-    "global_reward_index": {
+    "global_reward_index_luna": {
       "$ref": "#/definitions/Decimal"
     },
-    "last_distributed": {
+    "global_reward_index_ust": {
+      "$ref": "#/definitions/Decimal"
+    },
+    "last_distributed_luna": {
       "type": "integer",
       "format": "uint64",
       "minimum": 0.0
     },
-    "total_bond_amount": {
+    "last_distributed_ust": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "total_bond_amount_luna": {
+      "$ref": "#/definitions/Uint128"
+    },
+    "total_bond_amount_ust": {
       "$ref": "#/definitions/Uint128"
     }
   },

@@ -1,1 +1,1 @@
-BE2515B75BA89DCAF58A88CDF4964A07988BB2871099430E23D0F088E8AE51E5
+code: 5 codespace: sdk data: "" events: [] gas_used: "855456" gas_wanted: "1995990" height: "0" info: "" logs: [] raw_log: '10000000uluna is smaller than 199599000000uluna: insufficient funds: insufficient funds' timestamp: "" tx: null txhash: B0C96B4CCC412EA8F015E4750FD85CE4A95445CA5BD21040ACC976A98F47A0C6
