@@ -26,8 +26,8 @@ STAKE_TOKEN_ADDRESS="juno18hh4dflvfdcuklc9q4ghlr83fy5k4sdx6rgfzzwhdfqznsj4xjzqds
 ##########################################################################################
 #not depends
 NODECHAIN=" $NODE --chain-id $CHAIN_ID"
-TXFLAG=" $NODECHAIN --gas-prices 100000$DENOM --gas auto --gas-adjustment 1.3"
-WALLET="--from kg"
+TXFLAG=" $NODECHAIN --gas-prices 1$DENOM --gas 2000000 --gas-adjustment 1.3"
+WALLET="--from test"
 
 WASMFILE="anchor_staking.wasm"
 
@@ -35,7 +35,7 @@ FILE_UPLOADHASH="uploadtx.txt"
 FILE_CONTRACT_ADDR="contractaddr.txt"
 FILE_CODE_ID="code.txt"
 
-ADDR_KG="terra1vschkuj67kgtt9j5mjlwjdjjkq9ku0yy6wakzm"
+ADDR_KG="terra1cqlvtwsnkjw67jte37xfcyva3z69lgugqh93vf"
 
 CreateEnv() {
 
